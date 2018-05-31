@@ -1,0 +1,62 @@
+pipeline {
+    agent any
+    stages {
+        stage('Initialize workspace') {
+            steps {
+                sh '''#!/bin/bash
+                mkdir deployment
+                '''
+            }
+        }
+        stage('Checkout Source Code') {
+            steps {
+                sh '''#!/bin/bash
+                cd deployment
+                git clone https://github.com/neeleshg/neelesh-demo.git
+                '''
+            }
+        }
+        stage('Building Docker Image and upload to ECR') {
+            steps {
+                sh '''#!/bin/bash
+                TAG_NO=`shuf -i 1-10000000000 -n 1`
+                cd deployment/neelesh-demo
+                docker build -t neelesh-demo:$TAG_NO .
+                aws_config=`aws ecr get-login --no-include-email --region us-east-1`
+                if echo $aws_config; then $aws_config; fi
+                docker tag neelesh-demo:$TAG_NO 215372625801.dkr.ecr.us-east-1.amazonaws.com/neelesh-demo:$TAG_NO
+                docker push 215372625801.dkr.ecr.us-east-1.amazonaws.com/neelesh-demo:$TAG_NO
+                cd /opt/neelesh-infra/
+                live_img=`cat ./prev_tag`
+                echo "Live Image = $live_img"
+                taskdef_to_install=`python /opt/neelesh-infra/scripts/getLiveTargetDef.py $live_img`
+                echo "Taskdef to install = $taskdef_to_install"
+                betaService=`python /opt/neelesh-infra/scripts/getBetaService.py $taskdef_to_install`
+                terraform apply -auto-approve -target=aws_ecs_task_definition."$taskdef_to_install" -var "image_tag=$TAG_NO"
+                #terraform destroy -auto-approve -target=aws_ecs_service."$betaService" -var "image_tag=$TAG_NO"
+                terraform apply -auto-approve -target=aws_ecs_service."$betaService" -var "image_tag=$TAG_NO"
+                echo $TAG_NO > ./green_tag
+                '''
+            }
+        }
+        stage('Deploy approval'){
+            steps {
+                input "Deploy to prod?"
+            }
+        }
+        stage('Deploying to Prod'){
+            steps {
+                sh '''#!/bin/bash
+                python /opt/neelesh-infra/scripts/port_swap.py
+                cd /opt/neelesh-infra
+                cat ./green_tag > ./prev_tag
+                '''
+            }
+        }
+	}
+    post { 
+        always {
+            cleanWs()
+        }
+    }
+}
