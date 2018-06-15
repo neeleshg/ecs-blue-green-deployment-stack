@@ -13,7 +13,7 @@ resource "aws_security_group" "ecs-securitygroup" {
       from_port = 0
       to_port = 0
       protocol = "tcp"
-      security_groups = ["${aws_security_group.neelesh-elb-securitygroup.id}"]
+      security_groups = ["${aws_security_group.ecs-demo-elb-securitygroup.id}"]
   } 
   ingress {
       from_port = 22
@@ -26,7 +26,7 @@ resource "aws_security_group" "ecs-securitygroup" {
   }
 }
 
-resource "aws_security_group" "neelesh-elb-securitygroup" {
+resource "aws_security_group" "ecs-demo-elb-securitygroup" {
   vpc_id = "${aws_vpc.main.id}"
   name = "neelesh-elb"
   description = "security group for ecs"
@@ -50,6 +50,6 @@ resource "aws_security_group" "neelesh-elb-securitygroup" {
       cidr_blocks = ["0.0.0.0/0"]
   } 
   tags {
-    Name = "neelesh-elb"
+    Name = "ecs-demo-elb"
   }
 }

@@ -1,3 +1,3 @@
-resource "aws_ecr_repository" "neelesh-demo" {
-  name = "neelesh-demo"
+resource "aws_ecr_repository" "ecs-demo-repo" {
+  name = "ecs-demo-repo"
 }
