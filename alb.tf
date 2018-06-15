@@ -1,11 +1,11 @@
-resource "aws_lb" "neelesh-alb" {
-  name = "neelesh-alb"
+resource "aws_lb" "ecs-demo-alb" {
+  name = "ecs-demo-alb"
 
   idle_timeout = 400
   subnets = ["${aws_subnet.main-public-1.id}","${aws_subnet.main-public-2.id}"]
-  security_groups = ["${aws_security_group.neelesh-elb-securitygroup.id}"]
+  security_groups = ["${aws_security_group.ecs-demo-elb-securitygroup.id}"]
   tags {
-    Name = "neelesh-alb"
+    Name = "ecs-demo-alb"
   }
 }
 
@@ -39,7 +39,7 @@ resource "aws_lb_target_group" "targetgroup2" {
 }
 
 resource "aws_lb_listener" "listern1" {
-  load_balancer_arn = "${aws_lb.neelesh-alb.arn}"
+  load_balancer_arn = "${aws_lb.ecs-demo-alb.arn}"
   port              = "80"
   protocol          = "HTTP"
 
@@ -65,7 +65,7 @@ resource "aws_lb_listener_rule" "lb_listener_rule1" {
 
 
 resource "aws_lb_listener" "listern2" {
-  load_balancer_arn = "${aws_lb.neelesh-alb.arn}"
+  load_balancer_arn = "${aws_lb.ecs-demo-alb.arn}"
   port              = "8080"
   protocol          = "HTTP"
 

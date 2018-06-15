@@ -24,14 +24,14 @@ pipeline {
                 docker build -t neelesh-demo:$TAG_NO .
                 aws_config=`aws ecr get-login --no-include-email --region us-east-1`
                 if echo $aws_config; then $aws_config; fi
-                docker tag neelesh-demo:$TAG_NO 215372625801.dkr.ecr.us-east-1.amazonaws.com/neelesh-demo:$TAG_NO
-                docker push 215372625801.dkr.ecr.us-east-1.amazonaws.com/neelesh-demo:$TAG_NO
-                cd /opt/neelesh-infra/
+                docker tag ecs-demo:$TAG_NO 215372625801.dkr.ecr.us-east-1.amazonaws.com/ecs-demo:$TAG_NO
+                docker push 215372625801.dkr.ecr.us-east-1.amazonaws.com/ecs-demo:$TAG_NO
+                cd /opt/ecs-blue-green-deployment-stack/
                 live_img=`cat ./prev_tag`
                 echo "Live Image = $live_img"
-                taskdef_to_install=`python /opt/neelesh-infra/scripts/getLiveTargetDef.py $live_img`
+                taskdef_to_install=`python /opt/ecs-blue-green-deployment-stack/scripts/getLiveTargetDef.py $live_img`
                 echo "Taskdef to install = $taskdef_to_install"
-                betaService=`python /opt/neelesh-infra/scripts/getBetaService.py $taskdef_to_install`
+                betaService=`python /opt/ecs-blue-green-deployment-stack/scripts/getBetaService.py $taskdef_to_install`
                 terraform apply -auto-approve -target=aws_ecs_task_definition."$taskdef_to_install" -var "image_tag=$TAG_NO"
                 #terraform destroy -auto-approve -target=aws_ecs_service."$betaService" -var "image_tag=$TAG_NO"
                 terraform apply -auto-approve -target=aws_ecs_service."$betaService" -var "image_tag=$TAG_NO"
@@ -47,8 +47,8 @@ pipeline {
         stage('Deploying to Prod'){
             steps {
                 sh '''#!/bin/bash
-                python /opt/neelesh-infra/scripts/port_swap.py
-                cd /opt/neelesh-infra
+                python /opt/ecs-blue-green-deployment-stack/scripts/port_swap.py
+                cd /opt/ecs-blue-green-deployment-stack
                 cat ./green_tag > ./prev_tag
                 '''
             }
